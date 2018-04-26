@@ -1,0 +1,97 @@
+---
+title: "Appendix A: Example Rmarkdown"
+output: 
+  # revealjs::revealjs_presentation:
+  #  theme: league
+  pdf_document: 
+    fig_width: 6
+    fig_height: 3.5
+---
+  
+  
+```{r include = FALSE}
+# Enter temperature data for three species
+  
+# Use the julian date of the midpoints of each month as the time values
+days <- c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349)
+  
+# Temperate green plant bug A. lucorum
+green.plant.bug <- matrix(days,12,2)
+green.plant.bug[,2] <- c(268.9, 271.6, 278.2, 286.6, 293.1, 297.4, 299.3, 298.1, 293.3, 286.4, 277.7, 271.1)
+
+shift.guess <- 2*pi*c(300/365,300/365,10/365)
+
+```
+
+
+We describe seasonal variability in temperature using a sine function that varies smoothly over time.
+
+\begin{equation*}
+T(t) = \mu_T + \alpha_T sin\left(\frac{2\pi}{365}t + \delta_T\right)
+\end{equation*}
+
+***
+
+```{r include = FALSE}
+
+# Define seasonal temperature function
+temp.t <- function(t,meanT,amplT,shiftT){
+	# t in days
+	meanT + amplT*sin(2*pi*t/365 + shiftT)
+}
+
+# Define a function that calculates sum of squared differences between data and estimates from function temp_t
+temp.t.nls <- function(x){
+	meanx <- x[1]
+	amplx <- x[2]
+	shiftx <- x[3]
+	
+	sum((spp.data[,2] - temp.t(spp.data[,1],meanx,amplx,shiftx))^2)
+}
+
+# Minimize the Sum of Squares function to get least square estimates
+
+mean.data <- ampl.data <- shift.data <- c()
+```
+```{r echo=FALSE}
+# Temperate green plant bug
+spp.data <- green.plant.bug
+init.pars <- c(mean(spp.data[,2]),0.5*(max(spp.data[,2])-min(spp.data[,2])),shift.guess[1])
+
+spp.opt <- optim(init.pars,temp.t.nls,method="L-BFGS-B",lower=c(0,0,0),upper=c(500,50,2*pi), control=list(factr=1e2))
+
+mean.data <- c(mean.data,spp.opt$par[1])
+ampl.data <- c(ampl.data,spp.opt$par[2])
+shift.data <- c(shift.data,spp.opt$par[3])
+
+i=1
+plot(spp.data[,1], spp.data[,2], ylab="Temperature K",xlab="",xaxt="n")
+points(seq(0,365,by=0.1), temp.t(seq(0,365,by=0.1), mean.data[i], ampl.data[i],shift.data[i]), type="l")
+axis(1,at=c(15,74,166,258,349), labels=c("Jan","Mar","June","Sept","Dec"))
+
+out.data <- data.frame(matrix(c(mean.data,ampl.data,shift.data),3,1,byrow=TRUE),row.names=c("mu","alpha","delta"))
+names(out.data) <- c("Species")
+
+```
+
+Parameter values:
+
+```{r echo=FALSE}
+
+library(knitr)
+kable(out.data,row.names=TRUE,digits=2)
+
+```
+
+
+\begin{table}
+\begin{tabular}{ | l | l | l | l | l | }
+\hline
+ &  Species \\
+\hline
+$\mu$  & 300.2$^{\circ}K$ \\
+$\alpha$  & 1.376$^{\circ}$ \\
+$\delta$ & 0.58 rad \\
+\hline
+\end{tabular}
+\end{table}
