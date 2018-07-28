@@ -1,0 +1,464 @@
+data visualization
+========================================================
+author: katie leap
+date: 07-28-18
+autosize: true
+
+```{r-setup, echo=FALSE, message = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+```
+
+
+overview
+========================================================
+
+1. ggplot2
+2. base R graphics
+3. gridExtra
+4. ggsave
+
+
+graph with communication in mind
+========================================================
+
+- when considering making a figure, sometimes we start with a graph in mind and try to make our data fit that graph
+- better practice is to consider what we're trying to communicate
+- how many variables do you have?
+- what type of data are they?
+
+our datasets!
+========================================================
+
+```{r}
+CO2 %>% 
+  summary()
+```
+
+our datasets!
+========================================================
+
+```{r}
+ToothGrowth %>% 
+  summary()
+```
+
+
+grammar of graphics
+========================================================
+
+- ggplot2 is designed with the idea that graphics all share a similar basic setup
+- whether it's a scatterplot or a line graph or a histogram, all graphs:
+  - have data
+  - are set in a coordinate system
+  - use visual marks to represent data points
+- the `ggplot()` call incorporates these things
+
+univariate analysis
+========================================================
+
+- let's say we only want to look at one variable
+- based on whether this variable is continuous or discrete, we can choose one of a few different outputs
+
+area plot
+========================================================
+
+```{r}
+ggplot(CO2, aes(uptake)) + geom_area(stat = "bin")
+```
+
+density plot
+========================================================
+
+```{r}
+ggplot(CO2, aes(conc)) + geom_density(kernel = "gaussian")
+```
+
+
+dotplot
+========================================================
+
+```{r}
+ggplot(ToothGrowth, aes(len)) + geom_dotplot()
+```
+
+
+frequency polygon
+========================================================
+
+```{r}
+ggplot(CO2, aes(conc)) + geom_freqpoly(bins = 10)
+```
+
+histogram
+========================================================
+
+```{r}
+ggplot(CO2, aes(uptake)) + geom_histogram(bins = 20) + geom_dotplot()
+```
+
+qq plot
+========================================================
+
+```{r}
+ggplot(ToothGrowth) + geom_qq(aes(sample = len)) +
+  geom_abline(slope = 1, intercept = 0, color = "red") + ylim(0,)
+```
+
+discrete: bar plot
+========================================================
+
+```{r}
+ggplot(ToothGrowth, aes(supp)) + geom_bar()
+```
+
+bivariate analysis
+========================================================
+continuous x , continuous y
+
+```{r}
+e <- ggplot(mpg, aes(cty, hwy))
+```
+
+labels
+========================================================
+
+```{r}
+e + geom_label(aes(label = cty), nudge_x = 1, nudge_y = 1, check_overlap = TRUE)
+```
+
+jitter
+========================================================
+
+```{r}
+e + geom_jitter(height = 2, width = 2)
+```
+
+scatterplot
+========================================================
+
+```{r}
+e + geom_point() + geom_rug(sides = "bl")
+```
+
+quantile
+========================================================
+
+```{r}
+e + geom_quantile()
+```
+
+rug
+========================================================
+
+```{r}
+e + geom_rug(sides = "bl")
+```
+
+
+smooth
+========================================================
+
+```{r}
+e + geom_smooth(method = lm)
+e + geom_smooth()
+```
+
+text
+========================================================
+
+```{r}
+e + geom_text(aes(label = cty), nudge_x = 1, nudge_y = 1, check_overlap = TRUE)
+```
+
+discrete x , continuous y
+========================================================
+
+```{r}
+f <- ggplot(mpg, aes(class, hwy))
+```
+
+col
+========================================================
+
+```{r}
+f + geom_col()
+
+mpg %>% 
+  group_by(class) %>% 
+  summarise(hwy = sum(hwy))
+```
+
+box plot
+========================================================
+
+```{r}
+f + geom_boxplot()
+```
+
+dot plot
+========================================================
+
+```{r}
+f + geom_dotplot(binaxis = "y", stackdir = "center")
+```
+
+violin plot
+========================================================
+
+```{r}
+f + geom_violin(scale = "area")
+```
+
+
+discrete x , discrete y
+========================================================
+
+```{r}
+g <- ggplot(diamonds, aes(cut, color))
+```
+
+count
+========================================================
+
+```{r}
+g + geom_count()
+```
+
+
+more-variate analysis
+========================================================
+
+```{r}
+ggplot(iris) + geom_point(aes(x = Sepal.Length, y = Sepal.Width, color = Species))
+```
+
+pay attention to aesthetics
+========================================================
+
+```{r}
+ggplot(iris) + geom_point(aes(x = Sepal.Length, y = Sepal.Width), color = "red")
+```
+
+pay attention to aesthetics
+========================================================
+```{r}
+ggplot(iris) + geom_point(aes(x = Sepal.Length, y = Sepal.Width, color = "red"))
+```
+
+graphic design is hard
+========================================================
+
+- intelligent defaults make it easier and harder to screw up
+- sometimes it is difficult to do a thing you want to do in ggplot on purpose
+  - it is difficult to make a pie chart because it's commonly accepted that pie charts are difficult to interpret
+- when you experience extreme difficulty doing something, take a second to consider what you *really* want and whether there is a simpler way to do it
+
+customization
+========================================================
+
+- labels
+- themes
+- colors
+- legends
+- reference lines
+
+scales
+========================================================
+
+```{r}
+ggplot(USArrests) + geom_point(aes(x = UrbanPop, y = Murder))
+```
+
+scales
+========================================================
+
+```{r}
+ggplot(USArrests) + geom_point(aes(x = UrbanPop, y = Murder)) +
+  scale_x_continuous(labels = percent)
+```
+
+scales
+========================================================
+
+```{r}
+USArrests %>% 
+  mutate(UrbanPop = UrbanPop/100) %>% 
+ggplot() + geom_point(aes(x = UrbanPop, y = Murder)) +
+  scale_x_continuous(labels = percent)
+```
+
+scales
+========================================================
+
+```{r}
+USArrests %>% 
+  mutate(UrbanPop = UrbanPop/100) %>% 
+ggplot() + geom_point(aes(x = UrbanPop, y = Murder)) +
+  scale_x_continuous(labels = percent) +
+  labs(x = "Percent Urban Population", y = "Murder Arrests per 100,000",
+       title = "Really Good Title",
+       subtitle = "Some Explanation here")
+```
+
+
+scales
+========================================================
+
+```{r}
+library(mlbench)
+data("BostonHousing")
+BostonHousing %>% 
+  mutate(medv = medv * 1000) %>% 
+ggplot() + geom_point(aes(x = medv, y = ptratio)) +
+  scale_x_continuous(labels = dollar_format())
+```
+
+scales
+========================================================
+
+```{r}
+library(mlbench)
+data("BostonHousing")
+BostonHousing %>% 
+  mutate(medv = medv * 1000) %>% 
+ggplot() + geom_point(aes(x = medv, y = ptratio)) +
+  scale_x_continuous(labels = dollar_format()) +
+  labs(x = "Median Value of Owner Occupied Homes",
+       y = "Student-Teacher Ratio by Town",
+       title = "Relationship between Property Value and Student-Teacher Ratio",
+       subtitle = "Data from the 1970 Census in the Boston area")
+```
+
+facet
+========================================================
+
+```{r}
+BostonHousing %>% 
+  mutate(medv = medv * 1000) %>% 
+ggplot() + geom_point(aes(x = medv, y = ptratio)) +
+  scale_x_continuous(labels = dollar_format()) +
+  labs(x = "Median Value of Owner Occupied Homes",
+       y = "Student-Teacher Ratio by Town",
+       title = "Relationship between Property Value and Student-Teacher Ratio",
+       subtitle = "Data from the 1970 Census in the Boston area") +
+  facet_grid(~chas, labeller=labeller(chas = c("0" = "Non-Riverfront", "1" = "Riverfront")))
+```
+
+facet
+========================================================
+
+```{r}
+data(BostonHousing2)
+BostonHousing2 %>% 
+  mutate(age = age / 100) %>% 
+  filter(town == "Boston" | town == "Marblehead" | town == "Salem" | town == "Cambridge") %>% 
+ggplot() + geom_density(aes(age)) +
+  labs(x = "Proportion of Owner-Occupied Units Built Prior to 1940",
+       title = "Age of Properties by Town",
+       subtitle = "Data from the 1970 Census in the Boston area")  +
+  facet_wrap(~town) +
+  scale_y_continuous(labels = percent)
+```
+
+special characters
+========================================================
+
+```{r}
+ggplot(USArrests) + geom_point(aes(x = UrbanPop, y = Murder)) +
+  xlab(c(expression(alpha), "murder"))
+```
+
+
+what are base R graphics?
+========================================================
+
+- the graphics system built into R
+- the only option for a long time
+- difficult to get exactly what you want, but once you've got it, base isn't regularly updated so it won't change
+- *default plot methods for objects*
+
+plotting model objects
+========================================================
+
+```{r}
+summary(lm(uptake ~ conc, data = CO2))
+```
+
+plotting model objects
+========================================================
+
+```{r}
+plot(lm(uptake ~ conc, data = CO2))
+```
+
+
+gridExtra
+========================================================
+
+- what if I need to put more than one graph into a layout?
+- `gridExtra` to the rescue!
+- each plot is called a "grob"
+
+grid.arrange
+========================================================
+
+```{r}
+library(gridExtra)
+p1 <- ggplot(iris) + geom_point(aes(x = Sepal.Length, y = Sepal.Width, color = Species))
+p2 <- ggplot(iris) + geom_point(aes(x = Petal.Length, y = Petal.Width, color = Species))
+
+grid.arrange(p1, p2)
+```
+
+grid.arrange
+========================================================
+
+```{r}
+grid.arrange(p1, p2, ncol = 2)
+```
+
+grid.table
+========================================================
+
+```{r}
+a <- anova(lm(Sepal.Length ~ Sepal.Width, data=iris))
+grid.table(round(a, digits=3))
+```
+
+
+tableGrob
+========================================================
+
+```{r}
+
+```
+
+
+ggsave
+========================================================
+
+- this can be pretty straightforward
+- `ggsave("filename.extension")` will save the most recent plot as the extension listed in the place listed
+- but you can make it more complicated, especially if you have to do graphics for a publication
+```
+ggsave(filename, plot = last_plot(), device = NULL, path = NULL,
+  scale = 1, width = NA, height = NA, units = c("in", "cm", "mm"),
+  dpi = 300, limitsize = TRUE, ...)
+```
+
+ggsave
+========================================================
+- `filename`:	File name to create on disk.
+- `plot`:	Plot to save, defaults to last plot displayed.
+- `device`:	Device to use. Can be either be a device function (e.g. png()), or one of "eps", "ps", "tex" (pictex), "pdf", "jpeg", "tiff", "png", "bmp", "svg" or "wmf" (windows only).
+- `path`:	Path to save plot to (combined with filename).
+
+ggsave
+========================================================
+- `scale`:	Multiplicative scaling factor.
+- `width, height, units`: Plot size in units ("in", "cm", or "mm"). If not supplied, uses the size of current graphics device.
+- `dpi`:	Plot resolution. Also accepts a string input: "retina" (320), "print" (300), or "screen" (72). Applies only to raster output types.
+- `limitsize`:	When TRUE (the default), ggsave will not save images larger than 50x50 inches, to prevent the common error of specifying dimensions in pixels.
