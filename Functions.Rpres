@@ -1,0 +1,195 @@
+writing functions and packages
+========================================================
+author: katie leap
+date: aug 25, 2018
+autosize: true
+
+functions
+========================================================
+
+- functions in R are a lot like in math
+- input and output
+- $f(x) = 6x + 3$
+- $f(1) = 9$
+- $f(3) = ?$
+
+functions
+========================================================
+
+- functions in R are stored as objects
+- you have to assign them to an object when you define them
+
+```{r}
+f_x <- function(x) 6*x + 3
+f_x(3)
+```
+
+
+functions
+========================================================
+
+- functions have one or multiple inputs, but just one output
+- if you want more than one output, you either need to put the outputs together into a dataframe or list, or you need more than one function
+- functions need to be self-contained: they reference nothing outside of the inputs
+
+```
+fun.name <- function(input) {
+  output <- something_with_the(input)
+  return(output)
+}
+```
+
+when should I write a function?
+========================================================
+
+- if you're going to do something more than twice, write a function to do it
+- typing and copying/pasting introduces unpredictable errors
+- if you want somebody else to do the same thing you've done, write a function or make a package
+- if you want to put code on a cluster or cloud computing service, write a function/make a package
+
+what's a package?
+========================================================
+
+- we'll get into the nitty gritty later if there's time/interest
+- but basically a package is a collection of functions that can be loaded
+- they include documentation on how to use the functions as well as examples
+- all of the background stuff that makes the functions run is hidden
+
+let's make a function
+========================================================
+
+- input: a year
+- output: number of days in that year
+
+
+let's make a function
+========================================================
+
+- here's some code that will return whether a year is a leap year
+
+```
+(year %% 4 == 0) & ((year %% 100 != 0) | (year %% 400 == 0))
+```
+
+let's make a function
+========================================================
+
+```{r}
+daysinyear.fun <- function(year) {
+  is.leap <- (year %% 4 == 0) & ((year %% 100 != 0) | (year %% 400 == 0))
+  output <- ifelse(is.leap, 366, 365)
+  return(output)
+}
+```
+
+let's make a function
+========================================================
+
+```{r}
+daysinyear.fun <- function(year) {
+  ifelse((year %% 4 == 0) & ((year %% 100 != 0) | (year %% 400 == 0)),
+         366, 365)
+}
+```
+
+let's make a function
+========================================================
+
+```{r}
+daysinyear.fun(2016)
+```
+
+```{r}
+daysinyear.fun(2018)
+```
+
+source
+========================================================
+
+- if you want to use a function you've written before, but you don't want to write the documentation or make a package, you can `source` an R script
+- first you save the R script with the .R extension
+- then you use the command `source(yourscript.R)` to load all of the functions from the script
+
+let's work through the whole thing
+========================================================
+
+- we'll start with a bunch of code I adapted to answer a question I had about something, but never reused
+- we'll make it into functions that capture the different functionalities of the code
+- we'll make some larger functions that make sense for things we might want to reuse
+- we'll save it as an R script
+- then we'll source it
+
+source code
+========================================================
+
+- the question I had was whether translational research was becoming more popular
+- the way I thought I could answer this was through a PubMed search
+- I found some code for the basic idea here: https://gist.github.com/freshbiostats/2de46d0c7a59cbf54ad0
+
+start at the top
+========================================================
+
+```{r}
+library(RISmed)
+library(ggplot2)
+
+query <- "'translational research' OR 'translational medicine'"
+
+trans_search <- EUtilsSummary(query, type="esearch",db = "pubmed",mindate=1980, maxdate=2018, retmax=30000)
+QueryCount(trans_search)
+```
+
+make it a function
+========================================================
+
+```{r}
+pubcount.fun <- function(query) {
+  search <- EUtilsSummary(query, type="esearch",db = "pubmed",
+                          mindate=1980, maxdate=2018, retmax=30000)
+  output <- QueryCount(search)
+  return(output)
+}
+```
+
+more options!
+========================================================
+
+```{r}
+pubcount.fun <- function(query, yearmin, yearmax) {
+  search <- EUtilsSummary(query, type="esearch", db = "pubmed",
+                          mindate = yearmin, maxdate = yearmax, retmax=30000)
+  output <- QueryCount(search)
+  return(output)
+}
+```
+
+next chunk
+========================================================
+
+```{r}
+trans_records <- EUtilsGet(trans_search)
+years <- YearPubmed(trans_records)
+trans_pubs_count <- as.data.frame(table(years)
+```
+
+let's put it in the previous function
+========================================================
+
+```{r}
+pubcount.fun <- function(query, yearmin, yearmax) {
+  search <- EUtilsSummary(query, type="esearch", db = "pubmed",
+                          mindate = yearmin, maxdate = yearmax, retmax=30000)
+  records <- EUtilsGet(search)
+  years <- YearPubmed(records)
+  output <- as.data.frame(table(years)
+  return(output)
+}
+```
+
+we lost an output
+========================================================
+
+- so the first function gave us the number of publications only
+- we lost that functionality by making a dataframe
+- is it worth it?
+
