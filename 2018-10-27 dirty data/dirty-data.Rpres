@@ -1,0 +1,457 @@
+dirty data
+========================================================
+author: katie leap
+date: 10/27/18
+
+> “Happy families are all alike; every unhappy family is unhappy in its own way.” –– Leo Tolstoy
+
+> “Tidy datasets are all alike, but every messy dataset is messy in its own way.” –– Hadley Wickham
+
+wifi
+========================================================
+
+**network**: RLadies
+
+**password**: shinyapps
+
+
+Github location
+========================================================
+All slides can be found at:
+[https://github.com/rladies/meetup-presentations_la/tree/master/2018-10-27%20dirty%20data](https://github.com/rladies/meetup-presentations_la/tree/master/2018-10-27%20dirty%20data)
+
+<small> note that this is an updated/adapted version of a presentation I gave in 2015, original slides [here](https://github.com/gridclub/r-summer-workshops-2016) </small>
+
+overview
+========================================================
+
+1. dirty data
+2. tidy data
+3. missingness
+4. workflow
+
+overview
+========================================================
+
+1. **dirty data**
+2. tidy data
+3. missingness
+4. workflow
+
+
+think - pair - share
+========================================================
+
+- what would make a dataset *dirty*?
+
+- how could you tell?
+
+
+aspects of dirty data
+========================================================
+
+- incomplete
+- inaccurate
+- inconsistent
+- poorly documented
+
+
+aspects of messy data
+========================================================
+
+- file format you don't like
+- difficult to manipulate
+- duplication of information
+
+dirty or messy? (throat vote)
+========================================================
+
+- dataset includes typos in the variable listing male/female
+
+dirty or messy? (throat vote)
+========================================================
+
+- dataset includes typos in the variable listing medication names
+
+dirty or messy? (throat vote)
+========================================================
+
+- dataset has missing values for entire variables
+
+dirty or messy? (throat vote)
+========================================================
+
+- dataset has one missing value
+
+overview
+========================================================
+
+1. dirty data
+2. **tidy data**
+3. missingness
+4. workflow
+
+
+think - pair - share
+========================================================
+
+- what would a tidy dataset look like?
+
+- how would it be structured?
+
+
+tidy data
+========================================================
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+is this tidy? (throat vote)
+========================================================
+
+A frequency table
+
+```{r, echo = FALSE}
+library(vcd)
+table(Arthritis$Sex, Arthritis$Improved)
+```
+
+
+can untidy data be useful?
+========================================================
+
+- as output, absolutely
+- as input for data analysis, not really
+
+Two main advantages according to Hadley Wickham:
+========================================================
+1. **Picking one consistent way of storing data:** easier to learn the tools that work with it because they have an underlying uniformity
+
+2. Placing variables in columns **allows R’s vectorised nature to shine:** most built-in R functions work with vectors of values
+
+overview
+========================================================
+
+1. dirty data
+2. tidy data
+3. **missingness**
+4. workflow
+
+
+think - pair - share
+========================================================
+
+Try to define the following math terms:
+
+- missing completely at random
+- missing at random 
+- missing not at random
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+People who have been recruited for a depression survey are less likely to respond if they're depressed.
+
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+The facility storing our blood samples has a power outage and half our samples are unusable.
+
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+Men are less willing to self-report depression.
+
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+Men who are depressed are less willing to self-report depression.
+
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+People with a certain risk factor are less likely to agree to give blood.
+
+
+MCAR (1) MAR (2) MNAR (3): throat vote
+========================================================
+
+Questionnaires that came in yesterday were destroyed by rain.
+
+
+overview
+========================================================
+
+1. dirty data
+2. tidy data
+3. missingness
+4. **workflow**
+
+Case Study: NHANES
+========================================================
+- We'll get started with a public health dataset that we're going to find online right now
+- [https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2013](https://wwwn.cdc.gov/nchs/nhanes/continuousnhanes/default.aspx?BeginYear=2013)
+
+```{r, message=FALSE, results='hide'}
+library(Hmisc)
+demographics <- sasxport.get("http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/DEMO_H.XPT")
+taste.smell <- sasxport.get("http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/CSX_H.XPT")
+```
+
+workflow
+========================================================
+
+1. Import data
+2. `summary()` of variables
+3. Decide which variables are important
+4. Use your brain
+  - Look for missing data: why are they missing and is this a problem?
+  - Look for out-of-range data: why would a living person have a pulse of 0 bpm?
+  - Make sure numbers are numbers and factors are factors
+  
+Back to NHANES
+========================================================
+- Our second step (after importing) is to look at the variables we have
+- Then we can decide which are important
+- We probably want to investigate a relationship, so we should choose a predictor variable and a response variable
+- Now we look at the codebook to figure out what these have been named
+
+summary()
+========================================================
+
+[http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/DEMO_H.htm](http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/DEMO_H.htm)
+
+```{r}
+summary(demographics)
+```
+
+summary()
+========================================================
+
+[http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/CSX_H.htm](http://wwwn.cdc.gov/Nchs/Nhanes/2013-2014/CSX_H.htm)
+
+```{r}
+summary(taste.smell)
+```
+
+Introducing dplyr!
+========================================================
+- `dplyr` works like magic
+- We're going to look at the following functions in `dplyr`:
+  - `select()`
+  - `rename()`
+  - `filter()`
+  - `mutate()`
+  - `group_by()`
+  - `summarize()`
+  - `arrange()`
+- They all do what it sounds like they do (but we'll go through them anyways)
+
+But First!
+========================================================
+
+- the pipe!
+- **%>%**
+- this handy little thing comes from the `magrittr` package
+- replaces the first argument in a function with the object before the pipe
+- it makes code a million times more readable
+- keyboard shortcut: **cmd-shift-M** (for **m**agrittr)
+
+%>% in action!
+========================================================
+```{r}
+library(magrittr) # or dplyr
+
+## confusing ##
+mean(seq_len(sum(seq(1:10))))
+
+## clear ##
+seq(1:10) %>% 
+  sum %>%
+  seq_len %>% 
+  mean
+```
+
+Back to NHANES
+========================================================
+- Let's select the variables we decided to work with
+- We can rename them at the same time
+```{r}
+library(plyr)
+library(dplyr)
+demo <- demographics %>% 
+  select(id=seqn,gender=riagendr,age=ridageyr) 
+```
+- If we didn't want to select only a specific number of columns, we would use `rename()`
+
+Freebie: helper functions
+========================================================
+- `contains()`
+- `ends_with()`
+- `everything()`
+- `matches()`
+- `num_range("x", 1:5)`: columns named x1, x2, x3, x4, x5.
+- `one_of()`
+- `starts_with()`
+
+Back to Cleaning!
+========================================================
+- `summary()` provides summary statistics
+- this is a one-stop-shop for missing data, out-of-range data and checking that numbers are numbers and factors are factors
+- however magic `dplyr` is, data management relies on your brain
+  - be thorough
+  - document what you do
+  - justify every decision you make
+  - don't overwrite your original data
+
+========================================================
+![Plus, now I know that I have risk factors for elbow dysplasia, heartworm, parvo, and mange.](http://imgs.xkcd.com/comics/genetic_testing.png)
+
+Mutants!
+========================================================
+- `mutate()` allows us to add new columns
+- usually we do this because we have changed something about another column and want to preserve both
+- for example, changing kg to lbs because this is AMERICA
+- `mutate_each()`: multiple columns
+
+Mutants!
+========================================================
+```{r}
+demo <- demographics %>% 
+  select(id=seqn,gender=riagendr,age=ridageyr) %>% 
+  mutate(gender=revalue(as.factor(gender), c("1"="male","2"="female")))
+summary(demo)
+```
+
+Select : Columns :: Filter : Rows
+========================================================
+- `filter()` allows you to pick rows that have a specific value inside a column
+- For example, let's say we want to pick all of the women
+```{r}
+women <- demo %>% 
+  filter(gender=="female")
+```
+- You can use the >, <, ==, >=, and <= operators to `filter()` rows
+```{r}
+old.farts <- demo %>% 
+  filter(age>75)
+```
+
+Summarize
+========================================================
+- When we want to get one number, we use `summarize()`
+- Think of functions like `mean()`
+```{r}
+demo %>% 
+  summarize(mean.age = mean(age))
+```
+- `summarize_each()`: multiple columns
+
+Grouping
+========================================================
+```{r}
+group <- demo %>%
+  group_by(gender)
+head(group)
+```
+
+Arrange
+========================================================
+```{r}
+arrange <- demo %>% 
+  arrange(gender)
+head(arrange)
+```
+
+Divide and Conquer!
+========================================================
+```{r}
+demo %>%
+  group_by(gender) %>%  
+  summarize(mean.age = mean(age))
+```
+
+Freebie: Summarize function examples
+========================================================
+- `dplyr` specific:
+  - `first`: First value of a vector.
+  - `last`: Last value of a vector.
+  - `nth`: Nth value of a vector.
+  - `n`: # of values in a vector.
+  - `n_distinct`: # of distinct values in a vector.
+- Other functions:
+  - `IQR`
+  - `min`, `max`
+  - `mean`, `median`
+  - `var`, `sd`
+
+Why did we download two datasets?
+========================================================
+- Because we can join them!
+- There are different joins depending on how you want to do it
+- I look them up every time: [data wrangling cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+But first!
+========================================================
+- 10 minutes to clean the second dataset!
+- Remember to:
+  - select just the variables you want (rename probably)
+  - look for missing values
+  - check your factors
+
+```{r, echo=FALSE}
+ts <- taste.smell %>% 
+  select(id=seqn,runny=csq260n,choc=csxchood) %>% 
+  mutate(runny=replace(runny,is.na(runny),0) %>% 
+           as.factor %>% 
+           revalue(c("1"="yes","0"="no")),
+         choc=revalue(as.factor(choc),c("1"="Lemon", "2"="Chocolate", 
+                                        "3"="Smoke","4"="Black pepper")))
+```
+
+Left join!
+========================================================
+```{r}
+library(tidyr)
+full.dat <- left_join(demo, ts, by = "id")
+```
+- Optional `by` statement
+- Can use more than one `by` variables as well
+  - `by = c("id","age")`
+
+Have fun!
+========================================================
+- Find some interesting stuff, please
+- Take a snack break if you like
+- Let me know what you find!
+  - Do old people smell funny?
+- Complete list of `dplyr` functions can be found on the [data wrangling cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+Gather and spread
+========================================================
+
+Problems we might have:
+
+1. One variable might be spread across multiple columns.
+2. One observation might be scattered across multiple rows.
+
+Separate and unite
+========================================================
+
+Problems we might have:
+
+1. Two values are in the same column.
+2. One value is split between two (or multiple) columns.
+
+
+One last note: outliers
+========================================================
+
+- when can I throw away my data?
+  - biologically impossible (blood pressure of 0)
+  - otherwise very carefully: document thoroughly, prepare to fight
